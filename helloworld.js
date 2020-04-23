@@ -1,49 +1,136 @@
-class Person {
-    constructor(firstName, lastName, yearBorn) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.yearBorn = yearBorn;
-    }
-
-    talk()
+// Apparently we can listen for keys without involving HTML
+pagebody.addEventListener('keydown', function (e) {
+    switch (e.key) 
     {
-        console.log("Hello, I'm just a person");
+        case  'ArrowLeft':
+            allAsteroids[1].xVelocity -= 1;
+            screenHandler.Render();
+            break;
+        case 'ArrowRight':
+            allAsteroids[1].xVelocity += 1;
+            screenHandler.Render();
+            break;
     }
-}
+}, true);
 
-class FamousPerson extends Person 
-{
-    // This override of the base constructor was
-    // given in an example, but it's not necessary apparently
-    // constructor(firstName, lastName, yearBorn) 
-    // {
-    //     super(firstName, lastName, yearBorn);
-    // }
-
-    talk()
+// A 2D array of 'pixels' (actually text characters)
+// that we're using a toy screen
+class Screen {
+    constructor(width, height) 
     {
-        console.log("I'm sorry, do I know you?")
+        this.width = width;
+        this.height = height;
+
+        // This will end up as an array of arrays!
+        this.screenContent = new Array(width);
+        
+        // Add nested arrays
+        for (let i = 0; i < this.width; i++) 
+        {
+            this.screenContent[i] = new Array(height);
+            for (let y = 0; y < this.height; y++)
+            {
+                this.screenContent[i][y] = false;
+            }
+        }
+    }
+
+    Clear()
+    {
+        for (let i = 0; i < this.width; i++) 
+        {
+            for (let y = 0; y < this.height; y++)
+            {
+                this.screenContent[i][y] = false;
+            }
+        }
+    }
+
+    Render()
+    {
+        let htmlScreenContent = '';
+        
+        for (let i = 0; i < this.width; i++) 
+        {
+            for (let y = 0; y < this.height; y++)
+            {
+                if (this.screenContent[i][y] == true) 
+                {
+                    // I wonder if all systems out there can display this character?
+                    htmlScreenContent = htmlScreenContent + '█';
+                } else 
+                {
+                    htmlScreenContent = htmlScreenContent + ' ';
+                };
+            }
+            htmlScreenContent = htmlScreenContent + '\n';
+        }
+        
+        HTMLScreen.textContent = htmlScreenContent;
     }
 }
 
-let allusers = [];
-allusers.push(new Person('Jelle', 'Van den Eynde', 1985));
-allusers.push(new FamousPerson('Muhammad', 'Ali', 1942));
-allusers.push(new FamousPerson('George', 'Martin', 1948));
-allusers.push(new FamousPerson('Warren', 'Buffett', 1930));
-allusers.push(new FamousPerson('John', 'Carmack', 1970));
-allusers.push(new FamousPerson('Phil', 'Ivey', 1977));
-
-// We can also just initialize an array of objects without a definition
-allproducts =
-[
-    {name: 'TOK Probability', iosLink: 'https://apps.apple.com/us/app/easy-probability/id1503574851'},
-    {name: 'TOK Poker', iosLink: 'https://apps.apple.com/us/app/learn-poker/id1494263170'}
-];
-
-allusers.sort( compareFn = function(x, y) { return x.yearBorn - y.yearBorn; } );
-
-for (i = 0; i < allusers.length; i++) 
+class MoveableObject
 {
-    allusers[i].talk();
+    constructor(xPos, yPos) 
+    {
+        this.xPos = xPos;
+        this.yPos = yPos;
+        this.xVelocity = 0;
+        this.yVelocity = 0;
+        this.size = 6;
+    }
+
+    drawToScreen()
+    {
+        for (let i = 0; i < this.size; i++) 
+        {
+            for (let y = 0; y < this.size; y++) 
+            {
+                console.log(typeof screenHandler);
+                console.log(typeof screenHandler.screenContent);
+                console.log('i:' + this.xPos + i + ' ' + screenHandler.screenContent.length);
+                console.log(typeof screenHandler.screenContent[this.xPos + i]);
+                console.log('y:' + this.yPos + y + ' ' + screenHandler.screenContent[0].length);
+                console.log(typeof screenHandler.screenContent[Math.round(this.xPos + i)][Math.round(this.yPos + y)]);
+                screenHandler.screenContent[Math.round(this.xPos + i)][Math.round(this.yPos + y)] = true;
+            }
+        }
+    }
 }
+
+
+function updateSimulation() 
+{
+    elapsedTime = 1;
+
+    // update and draw asteroids
+    for (let i = 0; i < allAsteroids.length; i++)
+    {
+        allAsteroids[i].xPos += allAsteroids[i].xVelocity * elapsedTime;
+        allAsteroids[i].yPos += allAsteroids[i].yVelocity * elapsedTime;
+        allAsteroids[i].drawToScreen();
+    }
+}
+
+function gameLoop(timestamp) {
+
+    elapsedTime = timestamp - lastRender;
+    console.log(allAsteroids[0].xPos);
+    
+    screenHandler.Clear();
+    updateSimulation();
+    screenHandler.Render();
+    
+    lastRender = timestamp
+
+    window.requestAnimationFrame(gameLoop);
+}
+
+let elapsedTime = 0;
+let lastRender = 0;
+screenHandler = new Screen(400, 600);
+let allAsteroids = [new MoveableObject(4, 4), new MoveableObject(100, 20)];
+allAsteroids[0].xVelocity = 0.05;
+
+gameLoop();

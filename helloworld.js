@@ -7,7 +7,7 @@ pagebody.addEventListener('keydown', function (e) {
     {
         case  'ArrowUp':
             allGameObjects[iPlayer].xVelocity += Math.sin(allGameObjects[iPlayer].angle) * 0.2;
-            if (allGameObjects[iPlayer].xVelocity > 0.7) {allGameObjects[iPlayer].xVelocity = 0.7};
+            if (allGameObjects[iPlayer].xVelocity > 1) {allGameObjects[iPlayer].xVelocity = 1};
             allGameObjects[iPlayer].yVelocity += -Math.cos(allGameObjects[iPlayer].angle) * 0.2;
             if (allGameObjects[iPlayer].yVelocity > 0.7) {allGameObjects[iPlayer].yVelocity = 0.7};
             break;
@@ -173,8 +173,8 @@ class MoveableObject
         }
 
         // xVelocity is the rate at which this object is moving along the x-axis
-        this.xVelocity = (Math.random() * 6) / this.size;
-        this.yVelocity = (Math.random() * 6) / this.size;
+        this.xVelocity = (Math.random() * 10) / this.size;
+        this.yVelocity = (Math.random() * 10) / this.size;
 
         this.rotationSpeed = ((-0.05 + (Math.random() / 10)) * 6) / this.size;
     }
@@ -278,6 +278,8 @@ let allGameObjects = [
     new MoveableObject(40, 275),
     new MoveableObject(250, 250),
     new MoveableObject(350, 150),
+    new MoveableObject(550, 40),
+    new MoveableObject(560, 250)
     ];
 // the player should be a triangle
 allGameObjects[iPlayer].polygon = [[0, -6], [-3, +3], [+3, +3]]

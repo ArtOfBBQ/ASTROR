@@ -1,5 +1,6 @@
 // the index of the object controlled by the player
-let iPlayer = 1;
+let iPlayer = 0;
+let requestShootBullet = false;
 
 // Apparently we can listen for keys without involving HTML
 pagebody.addEventListener('keydown', function (e) {
@@ -19,6 +20,14 @@ pagebody.addEventListener('keydown', function (e) {
             break;
         case 'ArrowRight':
             allGameObjects[iPlayer].angle += 0.3;
+            break;
+        case 'd':
+            allGameObjects[iPlayer].scheduledForDeath = true;
+            break;
+        case ' ':
+            // user pushed space bar
+            // shoot a 'bullet' which is also represented by a moveable object
+            requestShootBullet = true;
             break;
     }
 }, true);
@@ -122,12 +131,18 @@ class MoveableObject
 
         // the angle describes the rotation of this object
         this.angle = Math.random();
-        
+
+        // set this to true to make this thing disappear asap
+        this.scheduledForDeath = false;
+
+        // Set this to false to let the object disapppear when it moves off screen
+        // Set to true to make the object re-spawn on the opposite side of the screen
+        this.persistsOffScreen = true;
         
         // The polygon attribute is a collection of connectable dots
         // representing this object when it faces directly upwards
         let polygontype = Math.round(Math.round(Math.random() * 60)/10);
-        console.log('random asteroid type: ' + polygontype);
+        
         switch (polygontype)
         {
             case 0:
@@ -215,6 +230,126 @@ class MoveableObject
     }
 }
 
+// the laziest possible way to approximate gameplay;
+// we just remove all objects when they collide with something else
+// (another asteroid, the player, or a bullet)
+function deleteAllCollidingObjects() 
+{
+    // Sort all the items by their x-position,
+    // and after sorting, remove the ones who are 
+    // not x-colliding with their neighbors
+    // let xSortedCandidates = sortByPosPropertyAndRemoveNonColliding(allGameObjects, 'xPos');
+
+    // if (xSortedCandidates.length > 2) 
+    // {
+    //     console.log('x candidates left: ' + xSortedCandidates.length);
+    // }
+
+    // let ySortedCandidates = sortByPosPropertyAndRemoveNonColliding(xSortedCandidates, 'yPos');
+
+    for (var i = 0; i < allGameObjects.length; i++)
+    {
+        for (var y = 0; y < allGameObjects.length; y++)
+        {
+            if (i == y) { continue; }
+            
+            let dist = Math.sqrt
+            (
+                Math.pow(allGameObjects[i].xPos - allGameObjects[y].xPos, 2) +
+                Math.pow(allGameObjects[i].yPos - allGameObjects[y].yPos, 2)
+            );
+            if (typeof dist != 'number') { throw "distance was " + dist + ' typeof ' + typeof dist; }
+            if ( dist < (allGameObjects[i].size / 2) + (allGameObjects[y].size / 2) )
+            {
+                allGameObjects[i].scheduledForDeath = true;
+                allGameObjects[y].scheduledForDeath = true;
+            }
+        }
+    }
+}
+
+function sortByPosPropertyAndRemoveNonColliding(originalArray, propertyName)
+{
+    console.log('originalArray.length: ' + originalArray.length);
+    if (originalArray.length < 2) { return originalArray; }
+    if (originalArray == null) { return []; }
+
+    // we'll randomly choose one of the members as our pivot value
+    // and place all smaller values to the left, and are larger values to the right
+    // then recrusively sort both the left and right halves
+    // then concatenate left + pivot + right for a sorted array
+    // then remove all the ones which aren't colliding on this property (and therefore
+    // can't be colliding overall)
+    let outArray = [];
+    let leftArray = [];
+    let rightArray = [];
+
+    let iPivot = Math.floor((Math.random() * originalArray.length * 10) / 10);
+    let pivot = originalArray[iPivot][propertyName];
+
+    for (let i = 0; i < originalArray.length; i++) 
+    {
+        if (i == iPivot) { continue; }
+        
+        if (originalArray[i][propertyName] < pivot)
+        {
+            leftArray.push(originalArray[i][propertyName]);
+        }
+        else
+        {
+            rightArray.push(originalArray[i][propertyName]);
+        }
+    }
+
+    if (leftArray.length + rightArray.length + 1 != originalArray.length) 
+    {
+        throw "Sum of parts didn't match oriignalarray after combining ";
+    }
+
+    leftArray = sortByPosPropertyAndRemoveNonColliding(leftArray, propertyName);
+    rightArray = sortByPosPropertyAndRemoveNonColliding(leftArray, propertyName);
+    let origLength = leftArray.length + rightArray.length + 1;
+
+    // put sorted parts together
+    outArray = outArray.concat(leftArray);
+    outArray.push(originalArray[iPivot]);
+    outArray = outArray.concat(rightArray);
+    if (outArray.length != origLength) { throw "sum of parts issue";}
+
+    // filter out non-colliding objects
+    if (outArray.size < 3) { return outArray; }
+    for (var i = 1; i < leftArray.length - 1; i++) 
+    {
+        if
+        (
+            (outArray[i][propertyName] - outArray[i + 1][propertyName])
+            >= outArray[i]['size'] - outArray[i + 1]['size']
+        )
+        {
+            // could be colliding with its right neighbor, keep going
+            continue;
+        }
+        
+        if
+        (
+            (outArray[i][propertyName] - outArray[i - 1][propertyName])
+            >= outArray[i]['size'] - outArray[i - 1]['size']
+        )
+        {
+            // could be colliding with its right neighbor, keep going
+            continue;
+        }
+
+        // we now know that i isn't colliding with either of its neighbors,
+        // and since the array is sorted, we know it can't possibly be colliding with anything
+        leftArray.Splice(i, 1);
+        i--;
+    }
+
+    return outArray;
+}
+
+
 
 function updateSimulation() 
 {
@@ -227,28 +362,99 @@ function updateSimulation()
     screenHandler.Drawline(0, 0, 0, screenHandler.height - 1);
     screenHandler.Drawline(screenHandler.width - 1, 0, screenHandler.width - 1, screenHandler.height - 1);
 
+    // if requested, fire a bullet
+    if (requestShootBullet) 
+    {
+        allGameObjects.push(
+            new MoveableObject(
+                allGameObjects[iPlayer].xPos,
+                allGameObjects[iPlayer].yPos));
+        allGameObjects[allGameObjects.length - 1].size = 1;
+        allGameObjects[allGameObjects.length - 1].polygon = [[-1, 0], [0, 0]];
+        allGameObjects[allGameObjects.length - 1].angle = allGameObjects[iPlayer].angle;
+        allGameObjects[allGameObjects.length - 1].persistsOffScreen = false;
+        allGameObjects[allGameObjects.length - 1].xVelocity = Math.sin(allGameObjects[iPlayer].angle) * 4;
+        allGameObjects[allGameObjects.length - 1].yVelocity = Math.cos(allGameObjects[iPlayer].angle) * -4;
+        allGameObjects[allGameObjects.length - 1].xPos += allGameObjects[allGameObjects.length - 1].xVelocity * 5;
+        allGameObjects[allGameObjects.length - 1].yPos += allGameObjects[allGameObjects.length - 1].yVelocity * 5;
+    }
+    requestShootBullet = false;
+
     // update and draw all game objects
     for (let i = 0; i < allGameObjects.length; i++)
     {
+        if (allGameObjects[i].scheduledForDeath) 
+        {
+            if (i == iPlayer) 
+            {
+                alert("You have died a horrific death. The reign of ASTROR, the dark lord, will now go unchallenged. Your failures will be recorded in the tome of shame.");
+                location.reload();
+            }
+            allGameObjects.splice(i, 1);
+            i--;
+            continue;
+        }
+
         allGameObjects[i].angle += allGameObjects[i].rotationSpeed;
         allGameObjects[i].xPos += allGameObjects[i].xVelocity * elapsedTime;
         allGameObjects[i].yPos += allGameObjects[i].yVelocity * elapsedTime;
 
         if ((allGameObjects[i].xPos + allGameObjects[i].size) < -1) 
         {
-            allGameObjects[i].xPos = screenHandler.width + allGameObjects[i].size;
+            if (allGameObjects[i].persistsOffScreen) 
+            {
+                allGameObjects[i].xPos = screenHandler.width + allGameObjects[i].size;
+            }
+            else 
+            {
+                allGameObjects.splice(i, 1);
+                continue;
+            }
+            
         }
         else if (allGameObjects[i].xPos > screenHandler.width + allGameObjects[i].size) 
         {
-            allGameObjects[i].xPos = 0;
+            if (allGameObjects[i].persistsOffScreen) 
+            {
+                allGameObjects[i].xPos = 0;
+            }
+            else 
+            {
+                allGameObjects.splice(i, 1);
+                continue;
+            }
         }
         else if ((allGameObjects[i].yPos + allGameObjects[i].size) < -1) 
         {
-            allGameObjects[i].yPos = screenHandler.height + allGameObjects[i].size;
+            if (allGameObjects[i].persistsOffScreen) 
+            {
+                allGameObjects[i].yPos = screenHandler.height + allGameObjects[i].size;
+            }
+            else 
+            {
+                allGameObjects.splice(i, 1);
+                continue;
+            }
         }
         else if (allGameObjects[i].yPos > screenHandler.height + allGameObjects[i].size) 
         {
-            allGameObjects[i].yPos = -1;
+            if (allGameObjects[i].persistsOffScreen) 
+            {
+                allGameObjects[i].yPos = -1;
+            }
+            else
+            {
+                allGameObjects.splice(i, 1);
+                continue;
+            }
+        }
+
+        deleteAllCollidingObjects();
+
+        if (allGameObjects.length == 1 && allGameObjects[0].scheduledForDeath == false) 
+        {
+            alert("ASTROR, the dark lord, has been vanquished! You are the ultimate player!!!");
+            location.reload();
         }
 
         allGameObjects[i].drawToScreen();
@@ -272,8 +478,8 @@ let elapsedTime = 0;
 let lastRender = 0;
 screenHandler = new Screen(600, 300);
 let allGameObjects = [
-    new MoveableObject(50, 100),
     new MoveableObject(50, 20),
+    new MoveableObject(50, 100),
     new MoveableObject(200, 100),
     new MoveableObject(40, 275),
     new MoveableObject(250, 250),

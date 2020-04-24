@@ -141,17 +141,33 @@ class MoveableObject
                 this.polygon = [[1, -1], [-2, -1], [-4, 2], [-7, 2], [-8, 4], [-5, 5], [-2, 4], [0, 2], [2, 3], [4, 1]]
                 break;
             case 2:
-                this.polygon = [[1, -1], [-2, -1], [-4, 2], [-7, 2], [-8, 4], [-5, 5], [-2, 4], [0, 2], [2, 3], [4, 1]]
+                this.polygon = [[1, -1], [-2, -1], [-4, 2], [-7, 3], [-8, 4], [-5, 5], [-2, 4], [0, 2], [2, 3], [4, 1]]
                 break;
             default:
                 this.polygon = [[-6, -3], [-15, 3], [-8, 9], [0, 6], [6, 9], [11, 3], [3, -3]]
         }
 
-        let size = 1 + (Math.round(Math.random() * 60) / 10);
+        // randomly increase the polygon size for variety
+        let ransize = 1 + (Math.round(Math.random() * 60) / 10);
         for (let i = 0; i < this.polygon.length; i++) 
         {
-            this.polygon[i][0] *= size;
-            this.polygon[i][1] *= size;
+            this.polygon[i][0] *= ransize;
+            this.polygon[i][1] *= ransize;
+        }
+
+        // store the object's approx size (radius) for future reference
+        this.size = 0;
+        for (var i = 0; i < this.polygon.length; i++) 
+        {
+            if (Math.abs(this.polygon[i][0]) > this.size) 
+            {
+                this.size = Math.abs(this.polygon[i][0]);
+            }
+            
+            if (Math.abs(this.polygon[i][1]) > this.size) 
+            {
+                this.size = Math.abs(this.polygon[i][1]);
+            }
         }
     }
 
@@ -212,14 +228,24 @@ function updateSimulation()
         allGameObjects[i].xPos += allGameObjects[i].xVelocity * elapsedTime;
         allGameObjects[i].yPos += allGameObjects[i].yVelocity * elapsedTime;
 
-        if (allGameObjects[i].xPos < -15) 
+        
+        if ((allGameObjects[i].xPos + allGameObjects[i].size) < -1) 
         {
-            allGameObjects[i].xPos = screenHandler.width + 15;
+            allGameObjects[i].xPos = screenHandler.width + allGameObjects[i].size;
         }
-        if (allGameObjects[i].yPos < -15) 
+        else if (allGameObjects[i].xPos > screenHandler.width + allGameObjects[i].size) 
         {
-            allGameObjects[i].yPos = screenHandler.height + 15;
+            allGameObjects[i].xPos = 0;
         }
+        else if ((allGameObjects[i].yPos + allGameObjects[i].size) < -1) 
+        {
+            allGameObjects[i].yPos = screenHandler.height + allGameObjects[i].size;
+        }
+        else if (allGameObjects[i].yPos > screenHandler.height + allGameObjects[i].size) 
+        {
+            allGameObjects[i].yPos = -1;
+        }
+
         allGameObjects[i].drawToScreen();
     }
 }
@@ -251,5 +277,7 @@ let allGameObjects = [
 // the player should be a triangle
 allGameObjects[iPlayer].polygon = [[0, -6], [-3, +3], [+3, +3]]
 allGameObjects[iPlayer].rotationSpeed = 0;
+allGameObjects[iPlayer].xVelocity = 0;
+allGameObjects[iPlayer].yVelocity = 0;
 
 gameLoop();

@@ -120,18 +120,14 @@ class MoveableObject
         this.xPos = xPos;
         this.yPos = yPos;
 
-        // xVelocity is the rate at which this object is moving along the x-axis
-        this.xVelocity = 1.5 - Math.round((Math.random() * 30)) / 10;
-        this.yVelocity = 1.5 - Math.round((Math.random() * 30)) / 10;
-        
         // the angle describes the rotation of this object
-        this.angle = Math.random() - 0.5;
-        this.rotationSpeed = Math.random() * 0.005;
+        this.angle = Math.random();
+        
         
         // The polygon attribute is a collection of connectable dots
         // representing this object when it faces directly upwards
-        let polygontype = Math.round(Math.round(Math.random() * 40)/10);
-        console.log(polygontype);
+        let polygontype = Math.round(Math.round(Math.random() * 60)/10);
+        console.log('random asteroid type: ' + polygontype);
         switch (polygontype)
         {
             case 0:
@@ -143,8 +139,14 @@ class MoveableObject
             case 2:
                 this.polygon = [[1, -1], [-2, -1], [-4, 2], [-7, 3], [-8, 4], [-5, 5], [-2, 4], [0, 2], [2, 3], [4, 1]]
                 break;
-            default:
+            case 3:
                 this.polygon = [[-6, -3], [-15, 3], [-8, 9], [0, 6], [6, 9], [11, 3], [3, -3]]
+            case 4:
+                this.polygon = [[-1, -4], [-5, -3], [-9, -2], [-10, 0], [-5, 1], [-2, 3], [2, 3], [5, 2], [8, 1], [7, -2], [3, -3]]
+            case 5:
+                this.polygon = [[3, -5], [-1, -4], [-5, -3], [-8, -2], [-11, 0], [-6, 1], [-2, 3], [2, 3], [10, 3], [15, 1], [13, -2], [7, -4]]
+            default:
+                this.polygon = [[-3, -2], [-5, 1], [-2, 3], [2, 3], [5, 2], [4, -1]]
         }
 
         // randomly increase the polygon size for variety
@@ -169,6 +171,12 @@ class MoveableObject
                 this.size = Math.abs(this.polygon[i][1]);
             }
         }
+
+        // xVelocity is the rate at which this object is moving along the x-axis
+        this.xVelocity = (Math.random() * 6) / this.size;
+        this.yVelocity = (Math.random() * 6) / this.size;
+
+        this.rotationSpeed = ((-0.05 + (Math.random() / 10)) * 6) / this.size;
     }
 
     drawToScreen()
@@ -177,15 +185,13 @@ class MoveableObject
 
         for (let i = 0; i < this.polygon.length; i++) 
         {
-            // rotation of this point
+            // from the original polygon skeleton, where should this pixel rotate to?
             let rotatedxpos = this.polygon[i][0] * Math.cos(this.angle) - (this.polygon[i][1] * Math.sin(this.angle));
             let rotatedypos = this.polygon[i][0] * Math.sin(this.angle) + (this.polygon[i][1] * Math.cos(this.angle));
             
-            // movement of this point
+            // store the coordinates for the rotated pixel
             let newxpos = Math.round(this.xPos + rotatedxpos);
             let newypos = Math.round(this.yPos + rotatedypos);
-            
-            
             targetpolygon[i] = [newxpos, newypos];
         }
 
@@ -228,7 +234,6 @@ function updateSimulation()
         allGameObjects[i].xPos += allGameObjects[i].xVelocity * elapsedTime;
         allGameObjects[i].yPos += allGameObjects[i].yVelocity * elapsedTime;
 
-        
         if ((allGameObjects[i].xPos + allGameObjects[i].size) < -1) 
         {
             allGameObjects[i].xPos = screenHandler.width + allGameObjects[i].size;

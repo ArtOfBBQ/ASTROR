@@ -141,8 +141,7 @@ class MoveableObject
         
         // The polygon attribute is a collection of connectable dots
         // representing this object when it faces directly upwards
-        let polygontype = Math.round(Math.round(Math.random() * 60)/10);
-        
+        let polygontype = Math.round(Math.round(Math.random() * 70)/10);
         switch (polygontype)
         {
             case 0:
@@ -160,6 +159,8 @@ class MoveableObject
                 this.polygon = [[-1, -4], [-5, -3], [-9, -2], [-10, 0], [-5, 1], [-2, 3], [2, 3], [5, 2], [8, 1], [7, -2], [3, -3]]
             case 5:
                 this.polygon = [[3, -5], [-1, -4], [-5, -3], [-8, -2], [-11, 0], [-6, 1], [-2, 3], [2, 3], [10, 3], [15, 1], [13, -2], [7, -4]]
+            case 6:
+                this.polygon = [[-10.5,-4],[-8.6,-7.9],[-5.5,-7.4],[-3.8,-12.4],[0.5,-11.8],[4.3,-13.8],[6.2,-14],[8.5,-14.3],[10.6,-14],[12.7,-13],[13.2,-11.4],[14.2,-8.6],[13,-5.1],[15.6,-2.1],[11.6,2.6],[9.1,9.6],[5,12.1],[3,12.7],[0.8,12.6],[-1.1,12.1],[-4.1,14.4],[-6.4,14.2],[-13.9,13.4],[-15.5,7.3],[-11.4,2.7],[-13.1,-0.4]]
             default:
                 this.polygon = [[-3, -2], [-5, 1], [-2, 3], [2, 3], [5, 2], [4, -1]]
         }
@@ -488,7 +489,7 @@ let allGameObjects = [
     new MoveableObject(560, 250)
     ];
 // the player should be a triangle
-allGameObjects[iPlayer].polygon = [[0, -6], [-3, +3], [+3, +3]]
+allGameObjects[iPlayer].polygon = [[0.7,-11.6],[2.5,-10.6],[3.2,-8.9],[2.8,-5.5],[3.6,-5.3],[3.1,0.3],[4.9,0.3],[5.1,-8.7],[6.7,-8.6],[6.7,11.7],[4.6,11.3],[4.6,4.8],[3,4.3],[2.5,9.2],[1.2,9],[1.1,10.2],[-1.5,10],[-1.5,8.9],[-2.8,8.9],[-2.9,5.2],[-4.6,4.8],[-4.5,11.4],[-6.6,11.1],[-6.7,-8.7],[-4.7,-8.6],[-5,-0.5],[-3.4,-0.4],[-3,-5.3],[-1.8,-5.5],[-1.5,-9.2],[-0.7,-10.4]]
 allGameObjects[iPlayer].rotationSpeed = 0;
 allGameObjects[iPlayer].xVelocity = 0;
 allGameObjects[iPlayer].yVelocity = 0;

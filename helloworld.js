@@ -2,7 +2,7 @@
 let iPlayer = 0;
 let requestShootBullet = false;
 
-// Apparently we can listen for keys without involving HTML
+// Apparently we can listen for keys like this
 pagebody.addEventListener('keydown', function (e) {
     switch (e.key) 
     {
@@ -109,7 +109,7 @@ class Screen {
                 {
                     // I wonder if all systems out there can display this character?
                     htmlScreenContent = htmlScreenContent + '█';
-                } else 
+                } else
                 {
                     htmlScreenContent = htmlScreenContent + ' ';
                 };
@@ -166,7 +166,7 @@ class MoveableObject
         }
 
         // randomly increase the polygon size for variety
-        let ransize = 1 + (Math.round(Math.random() * 60) / 10);
+        let ransize = 1 + (Math.round(Math.random() * 90) / 10);
         for (let i = 0; i < this.polygon.length; i++) 
         {
             this.polygon[i][0] *= ransize;
@@ -192,7 +192,7 @@ class MoveableObject
         this.xVelocity = (Math.random() * 10) / this.size;
         this.yVelocity = (Math.random() * 10) / this.size;
 
-        this.rotationSpeed = ((-0.05 + (Math.random() / 10)) * 6) / this.size;
+        this.rotationSpeed = ((-0.05 + (Math.random() / 10)) * 10) / this.size;
     }
 
     drawToScreen()
@@ -236,18 +236,6 @@ class MoveableObject
 // (another asteroid, the player, or a bullet)
 function deleteAllCollidingObjects() 
 {
-    // Sort all the items by their x-position,
-    // and after sorting, remove the ones who are 
-    // not x-colliding with their neighbors
-    // let xSortedCandidates = sortByPosPropertyAndRemoveNonColliding(allGameObjects, 'xPos');
-
-    // if (xSortedCandidates.length > 2) 
-    // {
-    //     console.log('x candidates left: ' + xSortedCandidates.length);
-    // }
-
-    // let ySortedCandidates = sortByPosPropertyAndRemoveNonColliding(xSortedCandidates, 'yPos');
-
     for (var i = 0; i < allGameObjects.length; i++)
     {
         for (var y = 0; y < allGameObjects.length; y++)
@@ -259,7 +247,7 @@ function deleteAllCollidingObjects()
                 Math.pow(allGameObjects[i].xPos - allGameObjects[y].xPos, 2) +
                 Math.pow(allGameObjects[i].yPos - allGameObjects[y].yPos, 2)
             );
-            if (typeof dist != 'number') { throw "distance was " + dist + ' typeof ' + typeof dist; }
+            
             if ( dist < (allGameObjects[i].size / 2) + (allGameObjects[y].size / 2) )
             {
                 allGameObjects[i].scheduledForDeath = true;
@@ -268,89 +256,6 @@ function deleteAllCollidingObjects()
         }
     }
 }
-
-function sortByPosPropertyAndRemoveNonColliding(originalArray, propertyName)
-{
-    console.log('originalArray.length: ' + originalArray.length);
-    if (originalArray.length < 2) { return originalArray; }
-    if (originalArray == null) { return []; }
-
-    // we'll randomly choose one of the members as our pivot value
-    // and place all smaller values to the left, and are larger values to the right
-    // then recrusively sort both the left and right halves
-    // then concatenate left + pivot + right for a sorted array
-    // then remove all the ones which aren't colliding on this property (and therefore
-    // can't be colliding overall)
-    let outArray = [];
-    let leftArray = [];
-    let rightArray = [];
-
-    let iPivot = Math.floor((Math.random() * originalArray.length * 10) / 10);
-    let pivot = originalArray[iPivot][propertyName];
-
-    for (let i = 0; i < originalArray.length; i++) 
-    {
-        if (i == iPivot) { continue; }
-        
-        if (originalArray[i][propertyName] < pivot)
-        {
-            leftArray.push(originalArray[i][propertyName]);
-        }
-        else
-        {
-            rightArray.push(originalArray[i][propertyName]);
-        }
-    }
-
-    if (leftArray.length + rightArray.length + 1 != originalArray.length) 
-    {
-        throw "Sum of parts didn't match oriignalarray after combining ";
-    }
-
-    leftArray = sortByPosPropertyAndRemoveNonColliding(leftArray, propertyName);
-    rightArray = sortByPosPropertyAndRemoveNonColliding(leftArray, propertyName);
-    let origLength = leftArray.length + rightArray.length + 1;
-
-    // put sorted parts together
-    outArray = outArray.concat(leftArray);
-    outArray.push(originalArray[iPivot]);
-    outArray = outArray.concat(rightArray);
-    if (outArray.length != origLength) { throw "sum of parts issue";}
-
-    // filter out non-colliding objects
-    if (outArray.size < 3) { return outArray; }
-    for (var i = 1; i < leftArray.length - 1; i++) 
-    {
-        if
-        (
-            (outArray[i][propertyName] - outArray[i + 1][propertyName])
-            >= outArray[i]['size'] - outArray[i + 1]['size']
-        )
-        {
-            // could be colliding with its right neighbor, keep going
-            continue;
-        }
-        
-        if
-        (
-            (outArray[i][propertyName] - outArray[i - 1][propertyName])
-            >= outArray[i]['size'] - outArray[i - 1]['size']
-        )
-        {
-            // could be colliding with its right neighbor, keep going
-            continue;
-        }
-
-        // we now know that i isn't colliding with either of its neighbors,
-        // and since the array is sorted, we know it can't possibly be colliding with anything
-        leftArray.Splice(i, 1);
-        i--;
-    }
-
-    return outArray;
-}
-
-
 
 function updateSimulation() 
 {
@@ -388,14 +293,14 @@ function updateSimulation()
         {
             if (i == iPlayer) 
             {
-                alert("You have died a horrific death. The reign of ASTROR, the dark lord, will now go unchallenged. Your failures will be recorded in the tome of shame.");
                 location.reload();
+                alert("You have died a horrific death. The reign of ASTROR, the dark lord, will now go unchallenged. Your failures will be recorded in the tome of shame.");
             }
             allGameObjects.splice(i, 1);
             i--;
             continue;
         }
-
+        
         allGameObjects[i].angle += allGameObjects[i].rotationSpeed;
         allGameObjects[i].xPos += allGameObjects[i].xVelocity * elapsedTime;
         allGameObjects[i].yPos += allGameObjects[i].yVelocity * elapsedTime;
@@ -411,7 +316,6 @@ function updateSimulation()
                 allGameObjects.splice(i, 1);
                 continue;
             }
-            
         }
         else if (allGameObjects[i].xPos > screenHandler.width + allGameObjects[i].size) 
         {
@@ -454,8 +358,8 @@ function updateSimulation()
 
         if (allGameObjects.length == 1 && allGameObjects[0].scheduledForDeath == false) 
         {
-            alert("ASTROR, the dark lord, has been vanquished! You are the ultimate player!!!");
             location.reload();
+            alert("ASTROR, the dark lord, has been vanquished! You are the ultimate player!!!");
         }
 
         allGameObjects[i].drawToScreen();
@@ -477,18 +381,18 @@ function gameLoop(timestamp) {
 
 let elapsedTime = 0;
 let lastRender = 0;
-screenHandler = new Screen(600, 300);
+screenHandler = new Screen(300, 175);
 let allGameObjects = [
     new MoveableObject(50, 20),
-    new MoveableObject(50, 100),
+    new MoveableObject(70, 100),
     new MoveableObject(200, 100),
-    new MoveableObject(40, 275),
-    new MoveableObject(250, 250),
-    new MoveableObject(350, 150),
-    new MoveableObject(550, 40),
-    new MoveableObject(560, 250)
+    new MoveableObject(40, 160),
+    new MoveableObject(250, 90),
+    new MoveableObject(270, 150),
+    new MoveableObject(290, 40),
+    new MoveableObject(290, 150)
     ];
-// the player should be a triangle
+
 allGameObjects[iPlayer].polygon = [[0.7,-11.6],[2.5,-10.6],[3.2,-8.9],[2.8,-5.5],[3.6,-5.3],[3.1,0.3],[4.9,0.3],[5.1,-8.7],[6.7,-8.6],[6.7,11.7],[4.6,11.3],[4.6,4.8],[3,4.3],[2.5,9.2],[1.2,9],[1.1,10.2],[-1.5,10],[-1.5,8.9],[-2.8,8.9],[-2.9,5.2],[-4.6,4.8],[-4.5,11.4],[-6.6,11.1],[-6.7,-8.7],[-4.7,-8.6],[-5,-0.5],[-3.4,-0.4],[-3,-5.3],[-1.8,-5.5],[-1.5,-9.2],[-0.7,-10.4]]
 allGameObjects[iPlayer].rotationSpeed = 0;
 allGameObjects[iPlayer].xVelocity = 0;

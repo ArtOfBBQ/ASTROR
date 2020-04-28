@@ -121,6 +121,8 @@ class Screen {
     }
 }
 
+// All of the objects in the game (asteroids, player, bullets)
+// are represented by instances of this class
 class MoveableObject
 {
     constructor(xPos, yPos) 
